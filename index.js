@@ -1,41 +1,52 @@
-require('colors');
-const { Wallet, JsonRpcProvider, ethers, parseUnits } = require('ethers');
-const fs = require('fs');
+require("colors");
+const { Wallet, JsonRpcProvider, ethers, parseUnits } = require("ethers");
+const fs = require("fs");
 
-const readlineSync = require('readline-sync');
-const moment = require('moment');
-const T3RN_ABI = require('./contracts/ABI');
-const { displayHeader } = require('./utils/display');
-const { transactionData, delay } = require('./utils/helper');
-const { getAmount } = require('./utils/api');
+const readlineSync = require("readline-sync");
+const moment = require("moment");
+const T3RN_ABI = require("./contracts/ABI");
+const { displayHeader } = require("./utils/display");
+const { transactionData, delay } = require("./utils/helper");
+const { getAmount } = require("./utils/api");
 
-const PRIVATE_KEYS = JSON.parse(fs.readFileSync('privateKeys.json', 'utf-8'));
+const PRIVATE_KEYS = JSON.parse(fs.readFileSync("privateKeys.json", "utf-8"));
 const RPC_URL = T3RN_ABI.at(-1).RPC_ARBT;
 
 const provider = new JsonRpcProvider(RPC_URL);
 const CONTRACT_ADDRESS = T3RN_ABI.at(-1).CA_ARBT;
 
+async function estimateGas(transaction) {
+  try {
+    const estimatedGas = await provider.estimateGas(transaction);
+    console.log(`Estimated gas limit: ${estimatedGas.toString()}`);
+    return estimatedGas;
+  } catch (error) {
+    console.error(`Failed to estimate gas: ${error.message}`);
+    return null;
+  }
+}
+
 (async () => {
   displayHeader();
-  console.log('⏳ Please wait...'.yellow);
-  console.log('');
+  console.log("⏳ Please wait...".yellow);
+  console.log("");
 
   const options = readlineSync.question(
-    'Choose the network that you want to use 👇\n1. Arbitrum Sepolia to Base Sepolia\n2. Arbitrum Sepolia to Blast Sepolia\n3. Arbitrum Sepolia to Optimism Sepolia\n4. Exit\n\nEnter 1, 2, 3, or 4: '
+    "Choose the network that you want to use 👇\n1. Arbitrum Sepolia to Base Sepolia\n2. Arbitrum Sepolia to Blast Sepolia\n3. Arbitrum Sepolia to Optimism Sepolia\n4. Exit\n\nEnter 1, 2, 3, or 4: "
   );
 
-  if (options === '4' || !options) {
-    console.log('👋 Exiting the bot. See you next time!'.cyan);
-    console.log('Subscribe: https://t.me/HappyCuanAirdrop.'.green);
+  if (options === "4" || !options) {
+    console.log("👋 Exiting the bot. See you next time!".cyan);
+    console.log("Subscribe: https://t.me/HappyCuanAirdrop.".green);
     process.exit(0);
   }
 
   const numTx = readlineSync.questionInt(
-    '🔄 How many times you want to swap or bridge? '
+    "🔄 How many times you want to swap or bridge? "
   );
 
   if (numTx <= 0) {
-    console.log('❌ Number of transactions must be greater than 0!'.red);
+    console.log("❌ Number of transactions must be greater than 0!".red);
     process.exit(1);
   }
 
@@ -46,18 +57,18 @@ const CONTRACT_ADDRESS = T3RN_ABI.at(-1).CA_ARBT;
     while (totalSuccess < numTx) {
       try {
         const balance = await provider.getBalance(wallet.address);
-        const balanceInEth = ethers.formatUnits(balance, 'ether');
+        const balanceInEth = ethers.formatUnits(balance, "ether");
 
         console.log(
           `⚙️ [ ${moment().format(
-            'HH:mm:ss'
+            "HH:mm:ss"
           )} ] Doing transactions for address ${wallet.address}...`.yellow
         );
 
         if (balanceInEth < 0.001) {
           console.log(
             `❌ [ ${moment().format(
-              'HH:mm:ss'
+              "HH:mm:ss"
             )} ] Your balance is too low (💰 ${balanceInEth} ETH), please claim faucet first!`
               .red
           );
@@ -81,33 +92,44 @@ const CONTRACT_ADDRESS = T3RN_ABI.at(-1).CA_ARBT;
               amount.hex,
               options
             );
-            const gasPrice = parseUnits('0.1', 'gwei'); // adjustable
+            const gasPrice = parseUnits("0.1", "gwei"); // adjustable
 
             const transaction = {
               data: request,
               to: CONTRACT_ADDRESS,
-              gasLimit: 2000000, // adjustable
               gasPrice,
               from: wallet.address,
-              value: parseUnits('0.0001', 'ether'), // adjustable
+              value: parseUnits("0.0001", "ether"), // adjustable
             };
+
+            const estimatedGasLimit = await estimateGas(transaction);
+            if (estimatedGasLimit) {
+              transaction.gasLimit = estimatedGasLimit;
+            } else {
+              console.log(
+                `❌ [ ${moment().format(
+                  "HH:mm:ss"
+                )} ] Failed to estimate gas. Skipping transaction...`.red
+              );
+              continue;
+            }
 
             const result = await wallet.sendTransaction(transaction);
             console.log(
               `✅ [ ${moment().format(
-                'HH:mm:ss'
+                "HH:mm:ss"
               )} ] Transaction successful from Arbitrum Sepolia to ${
-                options === '1' ? 'Base' : options === '2' ? 'Blast' : 'OP'
+                options === "1" ? "Base" : options === "2" ? "Blast" : "OP"
               } Sepolia!`.green
             );
             console.log(
               `🔗 [ ${moment().format(
-                'HH:mm:ss'
+                "HH:mm:ss"
               )} ] Transaction hash: https://sepolia-explorer.arbitrum.io/tx/${
                 result.hash
               }`.green
             );
-            console.log('');
+            console.log("");
 
             totalSuccess++;
             counter--;
@@ -116,32 +138,34 @@ const CONTRACT_ADDRESS = T3RN_ABI.at(-1).CA_ARBT;
               await delay(30000);
             }
           } catch (error) {
+            let message = error.message || "Unknown error";
             console.log(
               `❌ [ ${moment().format(
-                'HH:mm:ss'
-              )} ] Error during transaction: ${error}`.red
+                "HH:mm:ss"
+              )} ] Error during transaction: ${message}`.red
             );
           }
         }
       } catch (error) {
+        let message = error.message || "Unknown error";
         console.log(
           `❌ [ ${moment().format(
-            'HH:mm:ss'
-          )} ] Error in processing transactions: ${error}`.red
+            "HH:mm:ss"
+          )} ] Error in processing transactions: ${message}`.red
         );
       }
     }
   }
 
-  console.log('');
+  console.log("");
   console.log(
     `🎉 [ ${moment().format(
-      'HH:mm:ss'
+      "HH:mm:ss"
     )} ] All ${numTx} transactions are complete!`.green
   );
   console.log(
     `📢 [ ${moment().format(
-      'HH:mm:ss'
+      "HH:mm:ss"
     )} ] Subscribe: https://t.me/HappyCuanAirdrop`.green
   );
 })();
