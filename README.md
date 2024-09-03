@@ -20,7 +20,7 @@ A bot designed to automate transactions and bridge assets on the t3rn network, m
 1. **Clone the Repository**:
 
    ```bash
-   git clone https://github.com/dante4rt/t3rn-airdrop-bot.git
+   git clone https://github.com/IlhamEl777/t3rn-airdrop-bot.git
    cd t3rn-airdrop-bot
    ```
 
@@ -56,9 +56,9 @@ A bot designed to automate transactions and bridge assets on the t3rn network, m
 
 If you would like to support the development of this project, you can make a donation using the following addresses:
 
-- **Solana**: `GLQMG8j23ookY8Af1uLUg4CQzuQYhXcx56rkpZkyiJvP`
-- **EVM**: `0x960EDa0D16f4D70df60629117ad6e5F1E13B8F44`
-- **BTC**: `bc1p9za9ctgwwvc7amdng8gvrjpwhnhnwaxzj3nfv07szqwrsrudfh6qvvxrj8`
+- **Solana**: `0xfc5892dd5af7764557bb1a2d656496b04b5154b4`
+- **EVM**: `0xfc5892dd5af7764557bb1a2d656496b04b5154b4`
+- **BTC**: `bc1pjt4waggrqym47pwrnjhwhln34a2sf50tcxyv452rq0rfuprnqx0q7en60m`
 
 ## License
 
